@@ -64,21 +64,6 @@ public enum AccessibilityWalker {
         )
     }
 
-    /// The topmost presented view controller across active windows, or nil.
-    private static func topPresentedViewController(in windows: [UIWindow]) -> UIViewController? {
-        for window in windows {
-            guard let root = window.rootViewController else { continue }
-            var top = root
-            var presentedSomething = false
-            while let presented = top.presentedViewController {
-                top = presented
-                presentedSomething = true
-            }
-            if presentedSomething { return top }
-        }
-        return nil
-    }
-
     private static func headerLabel(in node: AXNode) -> String? {
         if node.traits.contains("header"), let label = node.label { return label }
         for child in node.children {
