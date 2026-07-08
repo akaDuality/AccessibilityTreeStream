@@ -36,31 +36,23 @@ public enum AccessibilityWalker {
             if count > bestCount { bestCount = count; bestBranch = node }
         }
 
-        // Not every sheet marks its content `accessibilityViewIsModal` (some
-        // only flag a dimming layer). The presented view controller's view is
-        // the reliable fallback — it's exactly what VoiceOver traps focus on.
-        let presented = topPresentedViewController(in: windows)
-
+        // Scope strictly to a content-bearing `accessibilityViewIsModal` branch —
+        // exactly what VoiceOver traps focus on. If a sheet fails to mark its
+        // content modal, we intentionally show everything, surfacing that as the
+        // app-side accessibility bug it is (rather than papering over it).
         let roots: [AXNode]
-        let scoped: Bool
         if let bestBranch, bestCount > 0 {
             roots = [bestBranch]
-            scoped = true
-        } else if let view = presented?.view,
-                  let node = buildNode(view, depth: 0), elementCount(node) > 0 {
-            roots = [node]
-            scoped = true
         } else {
             roots = windows.compactMap { buildNode($0, depth: 0) }
-            scoped = false
         }
 
         return AXSnapshot(
             appName: appName(),
             screenSize: [Double(screen.width), Double(screen.height)],
             roots: roots,
-            modalPresented: scoped,
-            modalLabel: roots.first.flatMap(headerLabel)
+            modalPresented: !modals.isEmpty,
+            modalLabel: bestBranch.flatMap(headerLabel)
         )
     }
 
