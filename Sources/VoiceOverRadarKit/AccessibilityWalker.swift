@@ -36,21 +36,47 @@ public enum AccessibilityWalker {
             if count > bestCount { bestCount = count; bestBranch = node }
         }
 
+        // Not every sheet marks its content `accessibilityViewIsModal` (some
+        // only flag a dimming layer). The presented view controller's view is
+        // the reliable fallback — it's exactly what VoiceOver traps focus on.
+        let presented = topPresentedViewController(in: windows)
+
         let roots: [AXNode]
+        let scoped: Bool
         if let bestBranch, bestCount > 0 {
             roots = [bestBranch]
+            scoped = true
+        } else if let view = presented?.view,
+                  let node = buildNode(view, depth: 0), elementCount(node) > 0 {
+            roots = [node]
+            scoped = true
         } else {
             roots = windows.compactMap { buildNode($0, depth: 0) }
+            scoped = false
         }
 
         return AXSnapshot(
             appName: appName(),
             screenSize: [Double(screen.width), Double(screen.height)],
             roots: roots,
-            modalPresented: !modals.isEmpty,
-            // Prefer the modal's header text over the dimming layer's label.
-            modalLabel: bestBranch.flatMap(headerLabel)
+            modalPresented: scoped,
+            modalLabel: roots.first.flatMap(headerLabel)
         )
+    }
+
+    /// The topmost presented view controller across active windows, or nil.
+    private static func topPresentedViewController(in windows: [UIWindow]) -> UIViewController? {
+        for window in windows {
+            guard let root = window.rootViewController else { continue }
+            var top = root
+            var presentedSomething = false
+            while let presented = top.presentedViewController {
+                top = presented
+                presentedSomething = true
+            }
+            if presentedSomething { return top }
+        }
+        return nil
     }
 
     private static func headerLabel(in node: AXNode) -> String? {
