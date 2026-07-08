@@ -52,7 +52,7 @@ public enum AccessibilityWalker {
             }
             if built.count > 1 {
                 roots = built.enumerated().map { index, pair in
-                    windowGroup(pair.0, index: index, content: pair.1)
+                    windowGroup(pair.0, name: windowName(pair.0, index: index), content: pair.1)
                 }
             } else {
                 roots = built.map(\.1)
@@ -68,16 +68,26 @@ public enum AccessibilityWalker {
         )
     }
 
+    /// A user-friendly name for a window (windows are sorted topmost-first).
+    private static func windowName(_ window: UIWindow, index: Int) -> String {
+        switch window.windowLevel {
+        case .alert: return "Alert window"
+        case .statusBar: return "Status bar"
+        default:
+            if window.windowLevel.rawValue > UIWindow.Level.normal.rawValue { return "Overlay window" }
+            return index == 0 ? "Foreground window" : "Background window"
+        }
+    }
+
     /// Wraps a window's content in a synthetic named container so multiple
     /// on-screen windows read as distinct groups.
-    private static func windowGroup(_ window: UIWindow, index: Int, content: AXNode) -> AXNode {
-        let level = Int(window.windowLevel.rawValue)
-        let name = index == 0 ? "Window (main)" : "Window \(index + 1) (level \(level))"
+    private static func windowGroup(_ window: UIWindow, name: String, content: AXNode) -> AXNode {
         // If the built window node is a structural wrapper, lift its children.
         let children = (!content.isElement && !content.isContainer) ? content.children : [content]
         let f = window.frame
         return AXNode(
-            id: "window-\(index)", label: name, value: nil, hint: nil, identifier: nil,
+            id: "window-\(UInt(bitPattern: ObjectIdentifier(window).hashValue))",
+            label: name, value: nil, hint: nil, identifier: nil,
             traits: [], isElement: false, isContainer: true, containerType: "window",
             frame: [Double(f.minX), Double(f.minY), Double(f.width), Double(f.height)],
             voiceOver: name, customActions: [], customContent: [], children: children
