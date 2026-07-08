@@ -171,9 +171,14 @@ public enum AccessibilityWalker {
             children.sort(by: readingOrderBefore)
         }
 
-        let meaningful = isElement || label != nil || value != nil || !traits.isEmpty
+        // Accessibility container: a grouping VoiceOver's rotor treats as a unit.
+        let containerType = decodeContainerType(object.accessibilityContainerType)
+        let isContainer = !children.isEmpty
+            && (containerType != nil || object.shouldGroupAccessibilityChildren || (!isElement && label != nil))
+
+        let meaningful = isElement || label != nil || value != nil || !traits.isEmpty || isContainer
         if !meaningful {
-            // A structural container: drop it, but keep its content. Collapse a
+            // A structural wrapper: drop it, but keep its content. Collapse a
             // single-child chain to reduce noise.
             if children.isEmpty { return nil }
             if children.count == 1 { return children[0] }
@@ -191,12 +196,24 @@ public enum AccessibilityWalker {
             identifier: identifier,
             traits: traits,
             isElement: isElement,
+            isContainer: isContainer,
+            containerType: containerType,
             frame: [Double(frame.minX), Double(frame.minY), Double(frame.width), Double(frame.height)],
             voiceOver: compose(label: label, value: value, traits: traits, hint: hint),
             customActions: (object.accessibilityCustomActions ?? []).map(\.name),
             customContent: customContent(of: object),
             children: children
         )
+    }
+
+    private static func decodeContainerType(_ type: UIAccessibilityContainerType) -> String? {
+        switch type {
+        case .dataTable: return "table"
+        case .list: return "list"
+        case .landmark: return "landmark"
+        case .semanticGroup: return "group"
+        default: return nil
+        }
     }
 
     private static func customContent(of object: NSObject) -> [String] {

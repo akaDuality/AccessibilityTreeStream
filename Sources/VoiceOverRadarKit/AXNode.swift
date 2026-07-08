@@ -11,6 +11,10 @@ public struct AXNode: Codable, Sendable, Equatable {
     public var identifier: String?
     public var traits: [String]
     public var isElement: Bool
+    /// True when this node groups child elements (accessibility container).
+    public var isContainer: Bool
+    /// Container kind: "list", "table", "landmark", "group", or nil.
+    public var containerType: String?
     /// [x, y, width, height] in screen coordinates.
     public var frame: [Double]
     /// A VoiceOver-style composed phrase for convenience.
