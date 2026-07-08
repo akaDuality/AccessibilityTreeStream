@@ -2,21 +2,21 @@
 import PackageDescription
 
 let package = Package(
-    name: "AccessibilityTreeStream",
+    name: "VoiceOverRadarKit",
     platforms: [.iOS(.v15)],
     products: [
-        .library(name: "AccessibilityTreeStream", targets: ["AccessibilityTreeStream"]),
+        .library(name: "VoiceOverRadarKit", targets: ["VoiceOverRadarKit"]),
     ],
     targets: [
         .target(
-            name: "AccessibilityTreeStream",
+            name: "VoiceOverRadarKit",
             // UIKit accessibility traversal is Objective-C-flavoured and runs on
             // the main thread; Swift 5 mode keeps that interop friction-free.
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         .testTarget(
-            name: "AccessibilityTreeStreamTests",
-            dependencies: ["AccessibilityTreeStream"],
+            name: "VoiceOverRadarKitTests",
+            dependencies: ["VoiceOverRadarKit"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
     ]

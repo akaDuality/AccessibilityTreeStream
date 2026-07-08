@@ -1,4 +1,4 @@
-# AccessibilityTreeStream
+# VoiceOver Radar Kit
 
 A drop-in Swift package that streams an iOS app's live `UIAccessibility` tree —
 the same information VoiceOver consumes — over a tiny local HTTP server, so an
@@ -10,7 +10,7 @@ elements, and drive accessibility actions.
 Swift Package Manager:
 
 ```swift
-.package(url: "https://github.com/akaDuality/AccessibilityTreeStream.git", from: "1.0.0")
+.package(url: "https://github.com/akaDuality/VoiceOverRadarKit.git", from: "1.0.0")
 ```
 
 ## Use
@@ -19,9 +19,9 @@ In a DEBUG build, start it once at launch:
 
 ```swift
 #if DEBUG
-import AccessibilityTreeStream
+import VoiceOverRadarKit
 // …
-AccessibilityTreeStream.shared.start()   // serves on http://localhost:8765/
+VoiceOverRadarKit.shared.start()   // serves on http://localhost:8765/
 #endif
 ```
 
@@ -55,7 +55,7 @@ returns the updated snapshot:
 
 ## See also
 
-- [VoiceOver Satelite](https://github.com/akaDuality/VoiceOverSatelite) —
+- [VoiceOver Radar](https://github.com/akaDuality/VoiceOverRadar) —
   a macOS companion app that reads this stream: lists elements in VoiceOver
   order, outlines them on the Simulator, and drives taps, adjust, custom
   actions, and VoiceOver gestures.

@@ -1,5 +1,5 @@
 import XCTest
-@testable import AccessibilityTreeStream
+@testable import VoiceOverRadarKit
 
 final class AXNodeTests: XCTestCase {
 

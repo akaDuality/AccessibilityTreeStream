@@ -3,15 +3,15 @@ import Foundation
 /// Drop-in accessibility exporter for DeviceHub.
 ///
 /// Add this package to your app and, in a DEBUG build, call
-/// `AccessibilityTreeStream.shared.start()` once at launch. DeviceHub can then read the
+/// `VoiceOverRadarKit.shared.start()` once at launch. DeviceHub can then read the
 /// current screen's accessibility tree from `http://<device>:8765/`.
 ///
 /// On the iOS Simulator, `localhost` is shared with the Mac, so DeviceHub reads
 /// `http://localhost:8765/`. On a physical device, use its LAN IP.
 @MainActor
-public final class AccessibilityTreeStream {
+public final class VoiceOverRadarKit {
 
-    public static let shared = AccessibilityTreeStream()
+    public static let shared = VoiceOverRadarKit()
 
     private var server: AXExportServer?
     public private(set) var port: UInt16 = 8765
@@ -28,9 +28,9 @@ public final class AccessibilityTreeStream {
             }
             server.start()
             self.server = server
-            NSLog("[AccessibilityTreeStream] serving accessibility tree on http://localhost:\(port)/")
+            NSLog("[VoiceOverRadarKit] serving accessibility tree on http://localhost:\(port)/")
         } catch {
-            NSLog("[AccessibilityTreeStream] failed to start on port \(port): \(error)")
+            NSLog("[VoiceOverRadarKit] failed to start on port \(port): \(error)")
         }
     }
 
