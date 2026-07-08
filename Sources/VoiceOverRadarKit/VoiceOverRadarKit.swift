@@ -68,6 +68,8 @@ public final class VoiceOverRadarKit {
         switch type {
         case "escape": AccessibilityWalker.performEscape()
         case "magictap": AccessibilityWalker.performMagicTap()
+        case "activate":
+            if let id = params["id"] { AccessibilityWalker.activate(id: id) }
         case "increment":
             if let id = params["id"] { AccessibilityWalker.adjust(id: id, increment: true) }
         case "decrement":

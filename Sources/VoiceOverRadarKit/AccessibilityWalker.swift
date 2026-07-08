@@ -206,6 +206,13 @@ public enum AccessibilityWalker {
 
     // MARK: Actions (triggered by DeviceHub)
 
+    /// Activate an element by id — VoiceOver's single-tap. Returns success.
+    @discardableResult
+    static func activate(id: String) -> Bool {
+        guard let object = registry[id]?.object else { return false }
+        return object.accessibilityActivate()
+    }
+
     /// Increment/decrement an adjustable element by id. Returns success.
     @discardableResult
     static func adjust(id: String, increment: Bool) -> Bool {
