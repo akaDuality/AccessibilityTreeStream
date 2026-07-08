@@ -44,7 +44,19 @@ public enum AccessibilityWalker {
         if let bestBranch, bestCount > 0 {
             roots = [bestBranch]
         } else {
-            roots = windows.compactMap { buildNode($0, depth: 0) }
+            // Build each window; when more than one has content (e.g. a passcode
+            // shown in a separate UIWindow), group each window's content under a
+            // named window container.
+            let built = windows.enumerated().compactMap { index, window -> (UIWindow, AXNode)? in
+                buildNode(window, depth: 0).map { (window, $0) }
+            }
+            if built.count > 1 {
+                roots = built.enumerated().map { index, pair in
+                    windowGroup(pair.0, index: index, content: pair.1)
+                }
+            } else {
+                roots = built.map(\.1)
+            }
         }
 
         return AXSnapshot(
@@ -53,6 +65,22 @@ public enum AccessibilityWalker {
             roots: roots,
             modalPresented: !modals.isEmpty,
             modalLabel: bestBranch.flatMap(headerLabel)
+        )
+    }
+
+    /// Wraps a window's content in a synthetic named container so multiple
+    /// on-screen windows read as distinct groups.
+    private static func windowGroup(_ window: UIWindow, index: Int, content: AXNode) -> AXNode {
+        let level = Int(window.windowLevel.rawValue)
+        let name = index == 0 ? "Window (main)" : "Window \(index + 1) (level \(level))"
+        // If the built window node is a structural wrapper, lift its children.
+        let children = (!content.isElement && !content.isContainer) ? content.children : [content]
+        let f = window.frame
+        return AXNode(
+            id: "window-\(index)", label: name, value: nil, hint: nil, identifier: nil,
+            traits: [], isElement: false, isContainer: true, containerType: "window",
+            frame: [Double(f.minX), Double(f.minY), Double(f.width), Double(f.height)],
+            voiceOver: name, customActions: [], customContent: [], children: children
         )
     }
 
@@ -264,9 +292,18 @@ public enum AccessibilityWalker {
         let windows = UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
-            .filter { !$0.isHidden && $0.windowLevel == .normal }
-        // Key window first so the visible screen leads the snapshot.
-        return windows.sorted { ($0.isKeyWindow ? 0 : 1) < ($1.isKeyWindow ? 0 : 1) }
+            // Include normal and higher-level windows (passcode/alert overlays),
+            // but skip below-normal and empty windows.
+            .filter { !$0.isHidden && $0.alpha > 0.01
+                && $0.windowLevel.rawValue >= UIWindow.Level.normal.rawValue
+                && $0.bounds.width > 0 }
+        // Topmost window first (higher level, then key window).
+        return windows.sorted {
+            if $0.windowLevel.rawValue != $1.windowLevel.rawValue {
+                return $0.windowLevel.rawValue > $1.windowLevel.rawValue
+            }
+            return ($0.isKeyWindow ? 0 : 1) < ($1.isKeyWindow ? 0 : 1)
+        }
     }
 
     private static func appName() -> String {
